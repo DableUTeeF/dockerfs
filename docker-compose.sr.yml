@@ -1,0 +1,47 @@
+services:
+  sr-mq:
+    container_name: mq_sample-sr-mq
+    image: rabbitmq:3-management
+    hostname: sr-mq
+    restart: always
+    networks:
+      - sr_net
+    environment:
+      TZ: Asia/Bangkok
+
+  sr:
+    build: sr/
+    working_dir: /app
+    command: python3 server_fastapi.py
+    ports:
+      - 7600:8000
+    networks:
+      - sr_net
+    depends_on:
+      - sr-mq
+#    volumes:
+#      - /home/palm/PycharmProjects/sr/sr:/app
+
+  sr-worker:
+    build: sr-worker/
+    command: python worker_pytorch.py
+    working_dir: /code
+#    volumes:
+#      - /home/palm/PycharmProjects/sr/sr-worker:/code
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '5' ]
+              capabilities: [ gpu ]
+        limits:
+          cpus: '16.0'
+          memory: 32G
+    networks:
+      - sr_net
+    depends_on:
+      - sr-mq
+
+networks:
+  sr_net:
