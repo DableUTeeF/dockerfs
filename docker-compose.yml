@@ -1,0 +1,18 @@
+services:
+  gpu_server:
+    # build: .
+    image: testfs
+    command: sh
+    volumes:
+      - /tmp/dockerfs:/work
+      - /tmp:/data:ro
+    ports:
+      - 8889:6006
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '7' ]
+              capabilities: [ gpu ]
